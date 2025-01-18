@@ -1,0 +1,37 @@
+import {Button, List} from "antd";
+import { sortByDirection } from "./date-converter.js";
+import { useState } from "react";
+import {CustomMapText} from "./custom-map.jsx";
+import {mockDateList} from "../services/utils.js";
+import {ArrayInput} from "./custom-for.jsx";
+
+
+export const DateList = () => {
+
+  const [state, setState] = useState("asc");
+
+  const descClickHandler = () => {
+    setState("desc");
+  };
+  const ascClickHandler = () => {
+    setState("asc");
+  };
+
+  const data = sortByDirection(state, mockDateList);
+
+  return (
+    < >
+      <List
+        itemLayout="vertical"
+        dataSource={data}
+        renderItem={(item) => <List.Item>{item.item}</List.Item>}
+      />
+      <Button type="primary" onClick={ascClickHandler}>
+        по возврастанию
+      </Button>
+      <Button type="primary" onClick={descClickHandler}>
+        по убыванию
+      </Button>
+    </>
+  );
+};
