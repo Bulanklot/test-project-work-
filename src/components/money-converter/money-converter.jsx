@@ -40,49 +40,68 @@ export const ExchangeRatesComponent = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(
-        `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/latest/${selectedCurrency}`,
-      )
-      .then((response) => {
-        if (response.status === 200) {
-          const data = response.data.conversion_rates;
-          const lastUpdateTime = response.data.time_last_update_unix * 1000;
-          setLastUpdateTime(new Date(lastUpdateTime).toString());
-          const nextUpdateTime = response.data.time_next_update_unix * 1000;
-          setNextUpdateTime(new Date(nextUpdateTime).toString());
+    if (selectedCurrency) {
+      axios
+        .get(
+          `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/latest/${selectedCurrency}`,
+        )
+        .then((response) => {
+          if (response.status === 200) {
+            const data = response.data.conversion_rates;
+            const timeOptions = {
+              year: "2-digit",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            };
+            const lastUpdate = new Date(
+              response.data.time_last_update_unix * 1000,
+            );
+            setLastUpdateTime(
+              lastUpdate.toLocaleString("ru-Ru", timeOptions).replace(",", " "),
+            );
+            const nextUpdate = new Date(
+              response.data.time_next_update_unix * 1000,
+            );
+            setNextUpdateTime(
+              nextUpdate.toLocaleString("ru-Ru", timeOptions).replace(",", " "),
+            );
 
-          setRates(
-            Object.keys(data)
-              .filter((key) => key !== selectedCurrency)
-              .filter((key) => currencies.includes(key))
-              .map((key, index) => {
-                return {
-                  currency: key,
-                  rate: `${data[key]} ${selectedCurrency}`,
-                  key: index,
-                };
-              }),
-          );
+            setRates(
+              Object.keys(data)
+                .filter((key) => key !== selectedCurrency)
+                .filter((key) => currencies.includes(key))
+                .map((key, index) => {
+                  return {
+                    currency: key,
+                    rate: `${data[key]} ${selectedCurrency}`,
+                    key: index,
+                  };
+                }),
+            );
 
-          setOtherCurrencies(
-            Object.keys(data)
-              .filter((key) => !rates.includes(key))
-              .map((key) => {
-                return {
-                  value: key,
-                  label: key,
-                };
-              }),
-          );
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+            setOtherCurrencies(
+              Object.keys(data)
+                .filter((key) => !rates.includes(key))
+                .map((key) => {
+                  return {
+                    value: key,
+                    label: key,
+                  };
+                }),
+            );
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
   }, [selectedCurrency]);
 
   return (
@@ -97,7 +116,7 @@ export const ExchangeRatesComponent = () => {
       align={"center"}
     >
       <Select
-        placeholder={"выберите валюту"}
+        value={selectedCurrency ? selectedCurrency : "выберите валюту"}
         style={{ width: 200 }}
         onChange={handleSelectChange}
         options={options}
