@@ -8,6 +8,7 @@ import { mockDateList } from "../../services/utils.js";
 const { Title } = Typography;
 export const DatesListComponent = () => {
   const [state, setState] = useState("asc");
+  const [disabled, setDisabled] = useState(false);
 
   const descClickHandler = () => {
     setState("desc");
@@ -28,10 +29,10 @@ export const DatesListComponent = () => {
         renderItem={(item) => <List.Item>{item.item}</List.Item>}
       />
             <Flex vertical={true}>
-      <Button type="primary," onClick={ascClickHandler}  >
+      <Button color="primary" onClick={ascClickHandler}  >
        <UpOutlined/>
       </Button>
-      <Button type="primary" onClick={descClickHandler}>
+      <Button color="primary" onClick={descClickHandler}>
         <DownOutlined/>
       </Button>
             </Flex>

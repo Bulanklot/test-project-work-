@@ -1,11 +1,18 @@
-import  { useState, useEffect } from "react";
-import { Table, Spin } from "antd";
+import { useState, useEffect } from "react";
+import { Table, Select, Typography, Flex } from "antd";
 import axios from "axios";
+import { Preloader } from "../custom-preloader/preloader.jsx";
 
 export const ExchangeRatesComponent = () => {
   const [rates, setRates] = useState([]);
+  const [otherCurrencies, setOtherCurrencies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [lastUpdateTime, setLastUpdateTime] = useState("");
+  const [nextUpdateTime, setNextUpdateTime] = useState("");
   const currencies = ["USD", "EUR", "GBP", "CNY", "JPY", "RUB"];
+  const { Title, Paragraph } = Typography;
+
   const columns = [
     {
       title: "Валюта",
@@ -18,20 +25,54 @@ export const ExchangeRatesComponent = () => {
       key: "rate",
     },
   ];
+  const options = [
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+    { value: "GBP", label: "GBP" },
+    { value: "RUB", label: "RUB" },
+    { value: "CNY", label: "CNY" },
+    { value: "JPY", label: "JPY" },
+  ];
+
+  const handleSelectChange = (value) => {
+    setSelectedCurrency(value);
+  };
+
   useEffect(() => {
     setLoading(true);
     axios
       .get(
-        `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/latest/RUB`,
+        `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/latest/${selectedCurrency}`,
       )
       .then((response) => {
         if (response.status === 200) {
           const data = response.data.conversion_rates;
+          const lastUpdateTime = response.data.time_last_update_unix * 1000;
+          setLastUpdateTime(new Date(lastUpdateTime).toString());
+          const nextUpdateTime = response.data.time_next_update_unix * 1000;
+          setNextUpdateTime(new Date(nextUpdateTime).toString());
+
           setRates(
             Object.keys(data)
+              .filter((key) => key !== selectedCurrency)
               .filter((key) => currencies.includes(key))
               .map((key, index) => {
-                return { currency: key, rate: data[key], key: index };
+                return {
+                  currency: key,
+                  rate: `${data[key]} ${selectedCurrency}`,
+                  key: index,
+                };
+              }),
+          );
+
+          setOtherCurrencies(
+            Object.keys(data)
+              .filter((key) => !rates.includes(key))
+              .map((key) => {
+                return {
+                  value: key,
+                  label: key,
+                };
               }),
           );
         }
@@ -39,12 +80,49 @@ export const ExchangeRatesComponent = () => {
       .catch((error) => {
         console.log(error);
       })
-      .finally(()=>{
+      .finally(() => {
         setLoading(false);
-    })
-  }, []);
+      });
+  }, [selectedCurrency]);
 
-  return (<div style = {{padding: '20px', fontSize: '20px', fontWeight: 700, fontStyle: 'italic'}}>
-    {!loading ? <Table columns={columns} dataSource={rates} /> : <Spin tip = "loading"/>}
-  </div>)
+  return (
+    <Flex
+      style={{
+        padding: "20px",
+        fontSize: "20px",
+        fontWeight: 700,
+      }}
+      gap={30}
+      vertical={true}
+      align={"center"}
+    >
+      <Select
+        placeholder={"выберите валюту"}
+        style={{ width: 200 }}
+        onChange={handleSelectChange}
+        options={options}
+      />
+      {selectedCurrency ? (
+        !loading ? (
+          <Flex gap={20} justify={"center"} align={"center"} vertical={true}>
+            <Title level={3}>Выбранная валюта {selectedCurrency}</Title>
+            <Paragraph>Дата последнего обновления : {lastUpdateTime}</Paragraph>
+            <Paragraph>Дата следующего обновления : {nextUpdateTime}</Paragraph>
+            <Table pagination={false} columns={columns} dataSource={rates} />
+            <Title level={3}>Посмотреть курс с другими валютами </Title>
+            <Select
+              placeholder={"выберите валюту"}
+              style={{ width: 200 }}
+              onChange={handleSelectChange}
+              options={otherCurrencies}
+            />
+          </Flex>
+        ) : (
+          <Preloader />
+        )
+      ) : (
+        <Paragraph>валюта не выбрана</Paragraph>
+      )}
+    </Flex>
+  );
 };

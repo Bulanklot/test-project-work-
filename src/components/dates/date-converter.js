@@ -21,12 +21,11 @@ const formatDate = (date) => {
     const year = parseInt(match[3], 10);
     const hours = parseInt(match[4], 10);
     const minutes = parseInt(match[5], 10);
-    const timezoneOffset =
-      parseInt(match[6], 10) +
-      (localTimeZone < 0 ? localTimeZone : -localTimeZone);
+    const timezoneOffset = parseInt(match[6], 10);
     const actualHours =
-      hours - (timezoneOffset > 0 ? timezoneOffset : hours + timezoneOffset);
-    const date = new Date(year, month, day, actualHours, minutes);
-    return date;
+      hours -
+      timezoneOffset +
+      (localTimeZone < 0 ? -localTimeZone : localTimeZone);
+    return new Date(year, month, day, actualHours, minutes);
   }
 };

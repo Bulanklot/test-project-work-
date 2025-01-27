@@ -8,15 +8,14 @@ export const CustomForComponent = () => {
   const [inputValue, setInputValue] = useState("");
   const [visible, setVisible] = useState(false);
   const [result, setResult] = useState("");
-
   const handleChange = (event) => {
     const value = event.target.value;
-    const numberValue = value.replace(/[^0-9.,]/g, "");
+    const numberValue = value.replace(/[^0-9. ,]|/g, "");
     setInputValue(numberValue);
   };
   const handleSubmit = () => {
     if (inputValue) {
-      const numberArray = inputValue.split(/[,.]/).map(Number);
+      const numberArray = inputValue.split(/[, .]/).map(Number);
       console.log(numberArray, "numberArray");
       const resultArray = customForFunc(
         0,
