@@ -16,7 +16,6 @@ export const CustomForComponent = () => {
   const handleSubmit = () => {
     if (inputValue) {
       const numberArray = inputValue.split(/[, .]/).map(Number);
-      console.log(numberArray, "numberArray");
       const resultArray = customForFunc(
         0,
         (index) => {

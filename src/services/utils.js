@@ -9,3 +9,12 @@ export const mockDateList = [
     "04.08.2024 10:00 (GMT+3)",
     "06.04.2024 03:00 (GMT+4)",
 ];
+
+export const currencyList = ["USD", "EUR", "GBP", "CNY", "JPY", "RUB"];
+
+export const requestStatus = {
+    Idle: "Idle",
+    Loading: "Loading",
+    Success: "Success",
+    Error: "Error",
+};

@@ -1,30 +1,45 @@
-import { useState, useEffect } from "react";
-import { Table, Select, Typography, Flex } from "antd";
-import axios from "axios";
+import { Table, Select, Typography, Flex, Input, Form } from "antd";
 import { Preloader } from "../custom-preloader/preloader.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  changeCurrency,
+  changeExtraCurrency,
+  currencySelector,
+  extraCurrencySelector,
+  getRates,
+  lastUpdateTimeSelector,
+  nextUpdateTimeSelector,
+  ratesSelector,
+  statusSelector,
+} from "../../slices/converterSlice.js";
+import {useEffect, useState} from "react";
+
+const { Title, Paragraph } = Typography;
 
 export const ExchangeRatesComponent = () => {
-  const [rates, setRates] = useState([]);
-  const [otherCurrencies, setOtherCurrencies] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState("");
-  const [lastUpdateTime, setLastUpdateTime] = useState("");
-  const [nextUpdateTime, setNextUpdateTime] = useState("");
+  const dispatch = useDispatch();
+  const rates = useSelector(ratesSelector);
+  const selectedCurrency = useSelector(currencySelector);
+  const extraCurrency = useSelector(extraCurrencySelector);
+  const [howMuch,setHowMuch] = useState(1);
+  const [inputStatus, setInputStatus] = useState("");
+  const loading = useSelector(statusSelector) === "Loading";
   const currencies = ["USD", "EUR", "GBP", "CNY", "JPY", "RUB"];
-  const { Title, Paragraph } = Typography;
-
   const columns = [
     {
       title: "Валюта",
       dataIndex: "currency",
       key: "currency",
+      sorter: (value, next) => value.currency.localeCompare(next.currency),
     },
     {
       title: "Курс",
       dataIndex: "rate",
       key: "rate",
+      sorter: (value, next) => value.rate - next.rate,
     },
   ];
+
   const options = [
     { value: "USD", label: "USD" },
     { value: "EUR", label: "EUR" },
@@ -35,110 +50,132 @@ export const ExchangeRatesComponent = () => {
   ];
 
   const handleSelectChange = (value) => {
-    setSelectedCurrency(value);
+    dispatch(changeCurrency(value));
+    dispatch(getRates(value));
   };
 
-  useEffect(() => {
-    setLoading(true);
-    if (selectedCurrency) {
-      axios
-        .get(
-          `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_API_KEY}/latest/${selectedCurrency}`,
-        )
-        .then((response) => {
-          if (response.status === 200) {
-            const data = response.data.conversion_rates;
-            const timeOptions = {
-              year: "2-digit",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            };
-            const lastUpdate = new Date(
-              response.data.time_last_update_unix * 1000,
-            );
-            setLastUpdateTime(
-              lastUpdate.toLocaleString("ru-Ru", timeOptions).replace(",", " "),
-            );
-            const nextUpdate = new Date(
-              response.data.time_next_update_unix * 1000,
-            );
-            setNextUpdateTime(
-              nextUpdate.toLocaleString("ru-Ru", timeOptions).replace(",", " "),
-            );
+  const currentRates = Object.keys(rates)
+    .filter((key) => key !== selectedCurrency)
+    .filter((key) => currencies.includes(key))
+    .map((key, index) => {
+      return {
+        currency: key,
+        rate: (rates[key]* howMuch).toFixed(2),
+        key: index,
+      };
+    });
 
-            setRates(
-              Object.keys(data)
-                .filter((key) => key !== selectedCurrency)
-                .filter((key) => currencies.includes(key))
-                .map((key, index) => {
-                  return {
-                    currency: key,
-                    rate: `${data[key]} ${selectedCurrency}`,
-                    key: index,
-                  };
-                }),
-            );
+  const otherCurrencies = Object.keys(rates)
+    .filter((key) => key !== selectedCurrency)
+    .filter((key) => !currentRates.includes(key))
+    .map((key) => {
+      return {
+        value: key,
+        label: key,
+      };
+    });
 
-            setOtherCurrencies(
-              Object.keys(data)
-                .filter((key) => !rates.includes(key))
-                .map((key) => {
-                  return {
-                    value: key,
-                    label: key,
-                  };
-                }),
-            );
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [selectedCurrency]);
+  const handleExtraChange = (value) => {
+    dispatch(changeExtraCurrency(value));
+  };
 
+  const timeOptions = {
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  };
+
+  const lastUpdateTime = new Date(useSelector(lastUpdateTimeSelector) * 1000)
+    .toLocaleString("ru-Ru", timeOptions)
+    .replace(",", "");
+
+  const nextUpdateTime = new Date(useSelector(nextUpdateTimeSelector) * 1000)
+    .toLocaleString("ru-Ru", timeOptions)
+    .replace(",", "");
+
+ const handleInputChange = (ev) => {
+  const value = (ev.target.value);
+  if(/^\d+$/.test(value) && Number(value) > 0){
+    setHowMuch(Number(ev.target.value));
+    setInputStatus("success");
+  } else {
+    setInputStatus("error");
+    setHowMuch(1);
+  }
+};
   return (
     <Flex
       style={{
         padding: "20px",
-        fontSize: "20px",
-        fontWeight: 700,
+        height: "100%",
+        fontWeight:"600",
+        fontSize:"20px"
       }}
-      gap={30}
+      gap={10}
       vertical={true}
       align={"center"}
     >
+      <div style={{display: "flex", flexDirection:"row"}}>
+      <Form.Item validateStatus={inputStatus === "error" ? "error" : "success"}  help={inputStatus==="error" ? "только цифры, больше 0" : ""}>
+      <Input
+        type="number"
+        placeholder={"введите сумму"}
+        defaultValue={1}
+        disabled={!selectedCurrency}
+        onChange={handleInputChange}
+        style={{ width: 150 }}
+      />
+        </Form.Item>
       <Select
         value={selectedCurrency ? selectedCurrency : "выберите валюту"}
-        style={{ width: 200 }}
+        style={{ width: 150 }}
         onChange={handleSelectChange}
         options={options}
       />
+      </div>
       {selectedCurrency ? (
-        !loading ? (
-          <Flex gap={20} justify={"center"} align={"center"} vertical={true}>
-            <Title level={3}>Выбранная валюта {selectedCurrency}</Title>
-            <Paragraph>Дата последнего обновления : {lastUpdateTime}</Paragraph>
-            <Paragraph>Дата следующего обновления : {nextUpdateTime}</Paragraph>
-            <Table pagination={false} columns={columns} dataSource={rates} />
+          <Flex  justify={"center"} align={"center"} vertical={true} style={{width:"50%"}}>
+            <Title level={3}>{selectedCurrency}</Title>
+            <div >
+            <Table
+              pagination={false}
+              columns={columns}
+              dataSource={currentRates}
+              tableLayout={"fixed"}
+              style={{whiteSpace:"nowrap", overflow:"visible"}}
+              loading={{
+                indicator: <Preloader/>,
+                spinning: loading
+              }}
+          />
+              <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", gap:"20px"}}>
+            <Paragraph style={{fontSize: "16px" , fontWeight: "400", color:"grey"}}>Дата последнего обновления : {lastUpdateTime}</Paragraph>
+            <Paragraph style={{fontSize:"16px", fontWeight:"400", color:"grey"}}>Дата следующего обновления : {nextUpdateTime}</Paragraph>
+              </div>
+            </div>
             <Title level={3}>Посмотреть курс с другими валютами </Title>
             <Select
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
               placeholder={"выберите валюту"}
               style={{ width: 200 }}
-              onChange={handleSelectChange}
+              onChange={handleExtraChange}
               options={otherCurrencies}
             />
+            <Paragraph style={{fontWeight:"600", fontSize:"16px"}}>
+              {extraCurrency
+                ? `${selectedCurrency} -> ${extraCurrency}: ${(rates[extraCurrency] * howMuch).toFixed(2)}`
+                : ""}
+            </Paragraph>
           </Flex>
-        ) : (
-          <Preloader />
-        )
       ) : (
         <Paragraph>валюта не выбрана</Paragraph>
       )}
