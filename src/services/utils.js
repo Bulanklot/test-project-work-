@@ -18,3 +18,19 @@ export const requestStatus = {
     Success: "Success",
     Error: "Error",
 };
+
+export const currencyOptions = [
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+    { value: "GBP", label: "GBP" },
+    { value: "RUB", label: "RUB" },
+    { value: "CNY", label: "CNY" },
+    { value: "JPY", label: "JPY" },
+];
+export  function dateUtility(value){
+    const toDay = new Date();
+    const findDate = new Date()
+    findDate.setDate(toDay.getDate()-value);
+    const data =  findDate.toISOString().split('T')[0];
+    return data;
+}

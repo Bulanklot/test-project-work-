@@ -1,6 +1,6 @@
 import { Button, Flex, Input, Modal, Typography } from "antd";
 import { useState } from "react";
-import { customForFunc } from "./custom-for-func.js";
+import {customForFunc, evenNumbers} from "./custom-for-func.js";
 
 const { Paragraph, Title } = Typography;
 const { TextArea } = Input;
@@ -16,13 +16,12 @@ export const CustomForComponent = () => {
   const handleSubmit = () => {
     if (inputValue) {
       const numberArray = inputValue.split(/[, .]/).map(Number);
-      const resultArray = customForFunc(
-        0,
-        (index) => {
-          return index < numberArray.length;
-        },
-        numberArray,
-        [],
+      let resultArray = [];
+      customForFunc(
+       numberArray,
+       evenNumbers,
+          0,
+          resultArray
       );
       setResult(resultArray.toString());
       setVisible(true);

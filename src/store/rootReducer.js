@@ -1,6 +1,6 @@
 import { combineReducers } from "redux";
-import {dataSlice} from "../slices/tabsSlice.js";
-import {converterSlice} from "../slices/converterSlice.js";
+import {dataSlice} from "./dates/tabsSlice.js";
+import {converterSlice} from "./currencyRates/index.js";
 
 const rootReducer = combineReducers({
     dataSlice : dataSlice.reducer,

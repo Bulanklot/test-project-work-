@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-/* Пробовал сделать через Редакс , но пока что не могу выявить ошибку */
+/* этот Редьюсер тестовый, его я не использую */
 
 const initialState = {
   datesList: [],
