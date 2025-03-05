@@ -1,4 +1,3 @@
-import { FunctionsPage } from "./FunctionsPage.jsx";
 import { ExchangeRatesComponent } from "../components/money-converter/ExchangeRatesComponent.jsx";
 import { DatesListComponent } from "../components/dates/DatesListComponent.jsx";
 import { CustomForComponent } from "../components/custom-for/CustomForComponent.jsx";

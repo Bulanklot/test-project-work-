@@ -9,9 +9,13 @@ import {
   ratesSelector,
   statusSelector,
 } from "../../store/currencyRates/selectors.js";
-import {changeCurrency, changeExtraCurrency, getRates} from "../../store/currencyRates/index.js";
-import { useState } from "react";
-import { currencyOptions,} from "../../services/utils.js";
+import {
+  changeCurrency,
+  changeExtraCurrency,
+  getRates,
+} from "../../store/currencyRates/index.js";
+import {useEffect, useState} from "react";
+import { currencyOptions } from "../../services/utils.js";
 import { TableChart } from "./TableChart.jsx";
 
 const { Title, Paragraph } = Typography;
@@ -45,7 +49,6 @@ export const ExchangeRatesComponent = () => {
   const handleSelectChange = (value) => {
     dispatch(changeCurrency(value));
     dispatch(getRates(value));
-    // dispatch(getTimeSeriesRates({startDate:"2025-02-01", endDate:"2025-02-25", baseCurrency: value,currentCurrency: 'RUB'}));
   };
 
   const currentRates = Object.keys(rates)
@@ -110,6 +113,12 @@ export const ExchangeRatesComponent = () => {
       setHowMuch(1);
     }
   };
+  useEffect(()=>{
+    dispatch(changeCurrency('USD'));
+    dispatch(getRates('USD'));
+
+  },[dispatch]);
+
   return (
     <Flex
       style={{
